@@ -4,7 +4,7 @@ let askedQuestions = [];
 let answers = {};
 let currentQuestion = null;
 let questionCount = 0;
-const TOTAL_QUESTIONS = 8;
+const TOTAL_QUESTIONS = 3;
 
 // ===== Entry Screen =====
 function renderEntryScreen() {
@@ -29,7 +29,7 @@ function renderLoadingQuestion() {
   document.getElementById("card").innerHTML = `<h1>Thinking of something ridiculous...</h1>`;
 }
 
-// ===== Ask Claude for the next question =====
+// ===== Ask Gemini (via our own server) for the next question =====
 async function generateNextQuestion() {
   const intensity = questionCount < 3 ? "mildly absurd"
                    : questionCount < 6 ? "aggressively unnecessary"
@@ -48,7 +48,7 @@ ${JSON.stringify(askedQuestions)}
 Generate ONE new question, ${intensity} in tone, referencing specific words
 from their decision to feel personalized.
 
-Respond ONLY with raw JSON, no markdown:
+Respond ONLY with raw JSON, no markdown, no backticks:
 {
   "text": "the question text with one relevant emoji",
   "type": "range" | "number" | "select" | "text",
@@ -58,19 +58,17 @@ Respond ONLY with raw JSON, no markdown:
 }
 `;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    })
+    body: JSON.stringify({ prompt })
   });
 
   const data = await response.json();
-  const raw = data.content.map(b => b.text || "").join("").trim();
-  const clean = raw.replace(/```json|```/g, "").trim();
+  if (!response.ok || !data.text) {
+    throw new Error(data.error || "The generate endpoint returned no text.");
+  }
+  const clean = data.text.replace(/```json|```/g, "").trim();
   return JSON.parse(clean);
 }
 
@@ -112,6 +110,7 @@ async function loadAndShowNextQuestion() {
     currentQuestion = q;
     renderQuestionObject(q);
   } catch (err) {
+    console.error(err);
     renderFallbackQuestion();
   }
 }
@@ -159,7 +158,7 @@ unhelpful non-resolution (e.g. referring it to a committee that doesn't exist).
 
 Tone: deadpan, mock-corporate, playful — never mean-spirited.
 
-Respond ONLY with raw JSON, no markdown:
+Respond ONLY with raw JSON, no markdown, no backticks:
 {
   "verdictLabel": "a short mock headline",
   "breakdown": "1-2 sentences dismantling their reasoning using their own answers",
@@ -167,19 +166,18 @@ Respond ONLY with raw JSON, no markdown:
 }
 `;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    })
+    body: JSON.stringify({ prompt })
   });
 
   const data = await response.json();
-  const raw = data.content.map(b => b.text || "").join("").trim();
-  return JSON.parse(raw.replace(/```json|```/g, "").trim());
+  if (!response.ok || !data.text) {
+    throw new Error(data.error || "The generate endpoint returned no text.");
+  }
+  const clean = data.text.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
 }
 
 // ===== Calculating screen =====
@@ -189,6 +187,7 @@ async function renderCalculating() {
     const verdict = await generateVerdict();
     renderResult(verdict);
   } catch (err) {
+    console.error(err);
     renderFallbackQuestion();
   }
 }
