@@ -216,4 +216,3 @@ function restart() {
 
 // ===== Start =====
 renderEntryScreen();
-//hi
