@@ -1,0 +1,16 @@
+{
+  "name": "decision-destroyer",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A useless project that destroys your decisions instead of helping.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2"
+  }
+}
