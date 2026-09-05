@@ -1,0 +1,218 @@
+// ===== State =====
+let userConfusion = "";
+let askedQuestions = [];
+let answers = {};
+let currentQuestion = null;
+let questionCount = 0;
+const TOTAL_QUESTIONS = 8;
+
+// ===== Entry Screen =====
+function renderEntryScreen() {
+  const card = document.getElementById("card");
+  card.innerHTML = `
+    <h1>What's confusing you?</h1>
+    <p class="question">Type your decision. We will not help.</p>
+    <input type="text" id="confusionInput" placeholder="e.g. Should I text my ex back?">
+    <button id="startBtn">Destroy this decision →</button>
+  `;
+  document.getElementById("startBtn").addEventListener("click", () => {
+    const val = document.getElementById("confusionInput").value.trim();
+    if (val) {
+      userConfusion = val;
+      loadAndShowNextQuestion();
+    }
+  });
+}
+
+// ===== Loading state =====
+function renderLoadingQuestion() {
+  document.getElementById("card").innerHTML = `<h1>Thinking of something ridiculous...</h1>`;
+}
+
+// ===== Ask Claude for the next question =====
+async function generateNextQuestion() {
+  const intensity = questionCount < 3 ? "mildly absurd"
+                   : questionCount < 6 ? "aggressively unnecessary"
+                   : "completely unhinged and borderline existential";
+
+  const prompt = `
+You are "The Decision Destroyer" — a mock decision-analysis engine.
+The user is confused about this specific decision: "${userConfusion}"
+
+Ask increasingly unnecessary, invasive, or absurd questions that superficially
+sound relevant to THEIR situation but are actually irrelevant nonsense.
+
+Already asked:
+${JSON.stringify(askedQuestions)}
+
+Generate ONE new question, ${intensity} in tone, referencing specific words
+from their decision to feel personalized.
+
+Respond ONLY with raw JSON, no markdown:
+{
+  "text": "the question text with one relevant emoji",
+  "type": "range" | "number" | "select" | "text",
+  "min": (only if range), "max": (only if range),
+  "options": (only if select, array of 3-5 short strings),
+  "placeholder": (only if number or text)
+}
+`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+
+  const data = await response.json();
+  const raw = data.content.map(b => b.text || "").join("").trim();
+  const clean = raw.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+}
+
+// ===== Render a question =====
+function renderQuestionObject(q) {
+  const card = document.getElementById("card");
+  const progressPct = (questionCount / TOTAL_QUESTIONS) * 100;
+
+  let inputHTML = "";
+  if (q.type === "range") {
+    inputHTML = `<input type="range" min="${q.min}" max="${q.max}" value="${(q.min + q.max) / 2}" id="answerInput">`;
+  } else if (q.type === "number") {
+    inputHTML = `<input type="number" placeholder="${q.placeholder || ''}" id="answerInput">`;
+  } else if (q.type === "select") {
+    inputHTML = `<select id="answerInput">` +
+      q.options.map(o => `<option value="${o}">${o}</option>`).join("") +
+      `</select>`;
+  } else if (q.type === "text") {
+    inputHTML = `<input type="text" placeholder="${q.placeholder || ''}" id="answerInput">`;
+  }
+
+  card.innerHTML = `
+    <div class="progress"><div class="progress-bar" style="width:${progressPct}%"></div></div>
+    <h1>Analyzing: "${userConfusion}"</h1>
+    <p class="question">${q.text}</p>
+    ${inputHTML}
+    <button id="nextBtn">Next →</button>
+  `;
+
+  document.getElementById("nextBtn").addEventListener("click", handleNext);
+}
+
+// ===== Load + show next question =====
+async function loadAndShowNextQuestion() {
+  renderLoadingQuestion();
+  try {
+    const q = await generateNextQuestion();
+    askedQuestions.push(q.text);
+    currentQuestion = q;
+    renderQuestionObject(q);
+  } catch (err) {
+    renderFallbackQuestion();
+  }
+}
+
+// ===== Fallback in case the API call fails =====
+function renderFallbackQuestion() {
+  const card = document.getElementById("card");
+  card.innerHTML = `
+    <h1>Something broke</h1>
+    <p class="question">The Decision Destroyer encountered an error. Try again.</p>
+    <button id="retryBtn">Retry</button>
+  `;
+  document.getElementById("retryBtn").addEventListener("click", loadAndShowNextQuestion);
+}
+
+// ===== Handle answer, move on or finish =====
+async function handleNext() {
+  const input = document.getElementById("answerInput");
+  answers[currentQuestion.text] = input.value;
+  questionCount++;
+
+  if (questionCount < TOTAL_QUESTIONS) {
+    await loadAndShowNextQuestion();
+  } else {
+    renderCalculating();
+  }
+}
+
+// ===== Generate the final verdict =====
+async function generateVerdict() {
+  const qaText = Object.entries(answers)
+    .map(([q, a]) => `Q: ${q}\nA: ${a}`)
+    .join("\n\n");
+
+  const prompt = `
+The user was confused about: "${userConfusion}"
+
+Here is the absurd interrogation they went through:
+${qaText}
+
+Do NOT give them a real answer. "Destroy" the decision: pick apart their own
+answers, use them against each other, point out a fake contradiction, and
+conclude the decision is now MORE confusing than before. End with a mock-serious,
+unhelpful non-resolution (e.g. referring it to a committee that doesn't exist).
+
+Tone: deadpan, mock-corporate, playful — never mean-spirited.
+
+Respond ONLY with raw JSON, no markdown:
+{
+  "verdictLabel": "a short mock headline",
+  "breakdown": "1-2 sentences dismantling their reasoning using their own answers",
+  "nonAnswer": "1 sentence of absurd non-resolution"
+}
+`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+
+  const data = await response.json();
+  const raw = data.content.map(b => b.text || "").join("").trim();
+  return JSON.parse(raw.replace(/```json|```/g, "").trim());
+}
+
+// ===== Calculating screen =====
+async function renderCalculating() {
+  document.getElementById("card").innerHTML = `<h1>Destroying your decision...</h1>`;
+  try {
+    const verdict = await generateVerdict();
+    renderResult(verdict);
+  } catch (err) {
+    renderFallbackQuestion();
+  }
+}
+
+// ===== Final result =====
+function renderResult(verdict) {
+  const card = document.getElementById("card");
+  card.innerHTML = `
+    <h1>${verdict.verdictLabel}</h1>
+    <p class="question">${verdict.breakdown}</p>
+    <p style="font-size:0.9em;color:#888;font-style:italic;">${verdict.nonAnswer}</p>
+    <button id="restartBtn">Confuse me again</button>
+  `;
+  document.getElementById("restartBtn").addEventListener("click", restart);
+}
+
+// ===== Restart =====
+function restart() {
+  answers = {};
+  askedQuestions = [];
+  questionCount = 0;
+  userConfusion = "";
+  renderEntryScreen();
+}
+
+// ===== Start =====
+renderEntryScreen();
