@@ -111,19 +111,22 @@ async function loadAndShowNextQuestion() {
     renderQuestionObject(q);
   } catch (err) {
     console.error(err);
-    renderFallbackQuestion();
+    const q = getFallbackQuestion();
+    askedQuestions.push(q.text);
+    currentQuestion = q;
+    renderQuestionObject(q);
   }
 }
 
-// ===== Fallback in case the API call fails =====
-function renderFallbackQuestion() {
-  const card = document.getElementById("card");
-  card.innerHTML = `
-    <h1>Something broke</h1>
-    <p class="question">The Decision Destroyer encountered an error. Try again.</p>
-    <button id="retryBtn">Retry</button>
-  `;
-  document.getElementById("retryBtn").addEventListener("click", loadAndShowNextQuestion);
+function getFallbackQuestion() {
+  const fallbackQuestions = [
+    { text: `How many backup plans does your ${userConfusion} currently have?`, type: "number", placeholder: "Enter a suspiciously precise number" },
+    { text: "If this decision were a minor European country, what would its national bird be?", type: "text", placeholder: "Name the bird" },
+    { text: "Rate the decision's confidence after observing one pigeon nearby.", type: "range", min: 1, max: 10 },
+    { text: "Which executive department should approve this decision?", type: "select", options: ["The Department of Vibes", "A retired wizard", "The Snack Committee", "Nobody"] },
+    { text: "What is the official weather forecast inside your head right now?", type: "text", placeholder: "Be meteorologically honest" }
+  ];
+  return fallbackQuestions[questionCount % fallbackQuestions.length];
 }
 
 // ===== Handle answer, move on or finish =====
@@ -188,7 +191,11 @@ async function renderCalculating() {
     renderResult(verdict);
   } catch (err) {
     console.error(err);
-    renderFallbackQuestion();
+    renderResult({
+      verdictLabel: "Decision status: aggressively unresolved",
+      breakdown: "Your answers form a committee-approved contradiction: the evidence is both compelling and suspiciously specific.",
+      nonAnswer: "The matter has been referred to the Department of Vibes for a decision sometime after lunch."
+    });
   }
 }
 
