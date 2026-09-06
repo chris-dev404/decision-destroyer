@@ -2,83 +2,50 @@
 
 
 
-# [Project Name] 🎯
+# decision destroyer 🎯
 
 
 ## Basic Details
-### Team Name: [Name]
+### Team Name: Dead ends
 
 
 ### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
+- Team Lead: Chris Seby - SCMS school of enginnering and technology
+- Member 2: Ashlyn Jose - SCMS school of enginnering and technology
 
 ### Project Description
-[2-3 lines about what your project does]
+Decision Destroyer is an AI-powered website where users enter a simple decision, such as “Should I order pizza?” The AI then asks increasingly random and unnecessary questions before analyzing the answers and giving a hilariously complicated final decision.
 
 ### The Problem (that doesn't exist)
-[What ridiculous problem are you solving?]
+People face unnecessarily simple decisions that could easily be answered in seconds. Decision Destroyer solves this “problem” by turning every simple choice into an absurdly complicated AI-powered investigation, making users question everything before finally giving them an equally useless answer.
 
 ### The Solution (that nobody asked for)
-[How are you solving it? Keep it fun!]
+We use AI to take a 10-second decision and turn it into a 5-question existential crisis. It asks increasingly ridiculous questions, overthinks everything, and finally delivers a completely unnecessary—but confidently stated—answer.
 
 ## Technical Details
 ### Technologies/Components Used
 For Software:
-- [Languages used]
-- [Frameworks used]
-- [Libraries used]
-- [Tools used]
-
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
-
-### Implementation
-For Software:
-# Installation
-[commands]
+- Languages used: HTML, CSS, JavaScript
+- Frameworks used: Node.js, Express.js
+- Libraries used: Google AI Stuio
+- Tools used: Visual Studio Code, Node.js, Git/GitHub
 
 # Run
-[commands]
-
-### Project Documentation
-For Software:
+node server.js
 
 # Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
+![alt text](<WhatsApp Image 2026-09-06 at 5.32.47 AM.jpeg>)
+App Title: The browser tab displays "The Decision Destroyer".
+Prompt Card: A central white modal asks, "What's confusing you?" followed by the satirical subtitle "Type your decision. We will not help."
+Input Field: The user has typed the query "should i sleep".
+Action Button: A red button below the input reads "Destroy this decision →
 
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
+![alt text](<WhatsApp Image 2026-09-06 at 5.16.17 AM-1.jpeg>)
+Current Status: Heading shows Analyzing: "should i sleep", processing the user's previous entry.
+Humorous Question: Asks, "To accurately calibrate your sleep parameters, what is the current emotional posture of your primary pillow? "
+Dropdown Selection: The user has selected "Aggressively Supportive" from the options menu.
+Action Button: A red button at the bottom reads Next → to proceed to the next prompt.
 
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
-
-# Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
-
-For Hardware:
-
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
-
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
-
-# Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
 
 ### Project Demo
 # Video
