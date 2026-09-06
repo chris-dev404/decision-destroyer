@@ -52,7 +52,7 @@ app.post("/api/generate", async (req, res) => {
 });
 
 // Serve index.html, style.css, script.js from this same folder
-app.use(express.static("."));
+app.use(express.static("./public"));
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
